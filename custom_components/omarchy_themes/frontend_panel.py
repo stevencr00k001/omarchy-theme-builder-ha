@@ -5,10 +5,12 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from .panel_spec import STATIC_URL, panel_registration
+from .const import DOMAIN
+from .panel_spec import FRONTEND_URL_PATH, STATIC_URL, panel_registration
 
 _LOGGER = logging.getLogger(__name__)
 FRONTEND_DIR = Path(__file__).parent / "frontend"
+_STATIC_PATHS = "static_paths"
 
 
 def bundled_frontend_dir() -> Path | None:
@@ -29,7 +31,7 @@ def bundled_frontend_dir() -> Path | None:
 
 async def async_register_frontend(hass) -> None:
     """Register static files and the iframe panel when the bundle is present."""
-    directory = bundled_frontend_dir()
+    directory = await hass.async_add_executor_job(bundled_frontend_dir)
     if directory is None:
         _LOGGER.error(
             "Omarchy Themes frontend bundle is missing at %s. The sidebar panel was not added.",
@@ -37,27 +39,33 @@ async def async_register_frontend(hass) -> None:
         )
         return
 
-    await _async_register_static(hass, STATIC_URL, str(directory))
+    state = hass.data.setdefault(DOMAIN, {})
+    if not state.get(_STATIC_PATHS):
+        from homeassistant.components.http import StaticPathConfig
+
+        await hass.http.async_register_static_paths(
+            [StaticPathConfig(STATIC_URL, str(directory), cache_headers=False)]
+        )
+        state[_STATIC_PATHS] = True
+
     spec = panel_registration()
     from homeassistant.components import frontend
 
     frontend.async_register_built_in_panel(
-        hass,
-        spec["component_name"],
-        spec["sidebar_title"],
-        spec["sidebar_icon"],
-        spec["frontend_url_path"],
-        spec["config"],
-        spec["require_admin"],
+        hass=hass,
+        component_name=spec["component_name"],
+        sidebar_title=spec["sidebar_title"],
+        sidebar_icon=spec["sidebar_icon"],
+        frontend_url_path=spec["frontend_url_path"],
+        config=spec["config"],
+        require_admin=spec["require_admin"],
+        update=True,
     )
 
 
-async def _async_register_static(hass, url_path: str, directory: str) -> None:
-    try:
-        from homeassistant.components.http import StaticPathConfig
+def async_remove_frontend(hass) -> None:
+    """Remove the sidebar panel so a later setup can add it again."""
+    from homeassistant.components import frontend
 
-        await hass.http.async_register_static_paths(
-            [StaticPathConfig(url_path, directory, False)]
-        )
-    except ImportError:
-        hass.http.register_static_path(url_path, directory, False)
+    if frontend.async_panel_exists(hass, FRONTEND_URL_PATH):
+        frontend.async_remove_panel(hass, FRONTEND_URL_PATH)

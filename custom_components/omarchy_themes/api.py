@@ -13,12 +13,9 @@ from .validate import ThemeRejected, decode_image, write_theme_files
 
 
 async def async_register(hass: HomeAssistant) -> None:
-    """Register the websocket commands, the save service, and the sidebar panel."""
-    from .frontend_panel import async_register_frontend
-
+    """Register the websocket commands and the save service."""
     websocket_api.async_register_command(hass, ws_status)
     websocket_api.async_register_command(hass, ws_save)
-    await async_register_frontend(hass)
     hass.services.async_register(
         DOMAIN,
         "save_theme",

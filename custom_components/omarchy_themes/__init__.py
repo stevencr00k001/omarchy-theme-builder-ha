@@ -13,13 +13,15 @@ from .const import DOMAIN
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
-_REGISTERED = "registered"
+_COMMANDS = "commands"
+_YAML = "yaml"
 
 
 async def async_setup(hass, config) -> bool:
     """Set up from configuration.yaml, if present."""
     hass.data.setdefault(DOMAIN, {})
     if DOMAIN in config:
+        hass.data[DOMAIN][_YAML] = True
         await _async_register(hass)
     return True
 
@@ -32,14 +34,20 @@ async def async_setup_entry(hass, entry) -> bool:
 
 
 async def async_unload_entry(hass, entry) -> bool:
-    """Unload a config entry. Commands stay available if YAML also set them up."""
+    """Remove the sidebar panel. YAML setup keeps the panel in place."""
+    if not hass.data.get(DOMAIN, {}).get(_YAML):
+        from .frontend_panel import async_remove_frontend
+
+        async_remove_frontend(hass)
     return True
 
 
 async def _async_register(hass) -> None:
-    if hass.data[DOMAIN].get(_REGISTERED):
-        return
-    hass.data[DOMAIN][_REGISTERED] = True
-    from .api import async_register
+    if not hass.data[DOMAIN].get(_COMMANDS):
+        from .api import async_register
 
-    await async_register(hass)
+        await async_register(hass)
+        hass.data[DOMAIN][_COMMANDS] = True
+    from .frontend_panel import async_register_frontend
+
+    await async_register_frontend(hass)
