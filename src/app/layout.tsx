@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(site || "http://127.0.0.1:4317"),
   title: "Omarchy Theme Builder for Home Assistant · Top End Smart Homes",
   description:
-    "Preview Omarchy palettes on a Home Assistant dashboard, try frosted glass, tiling, terminal, and other card styles, then download a theme. A free tool by Top End Smart Homes.",
+    "Preview Omarchy palettes on a Home Assistant dashboard, try frosted glass, tiling, terminal, and other card styles, then apply the theme on your hub. A free tool by Top End Smart Homes.",
   applicationName: "Omarchy Theme Builder",
   authors: [{ name: "Top End Smart Homes", url: teshUrl("/", "metadata") }],
   keywords: [
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Omarchy Theme Builder for Home Assistant",
     description:
-      "Build a Home Assistant theme from an Omarchy palette. Preview card styles live, then download YAML and a wallpaper. By Top End Smart Homes.",
+      "Build a Home Assistant theme from an Omarchy palette. Preview card styles live, then apply it on your hub. By Top End Smart Homes.",
     siteName: "Top End Smart Homes",
     type: "website",
     images: [

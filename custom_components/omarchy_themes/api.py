@@ -27,7 +27,7 @@ async def async_register(hass: HomeAssistant) -> None:
                 vol.Optional("image_filename"): cv.string,
                 vol.Optional("image_base64"): cv.string,
                 vol.Optional("activate", default=False): cv.boolean,
-                vol.Optional("set_for_user", default=False): cv.boolean,
+                vol.Optional("set_for_user", default=True): cv.boolean,
                 vol.Optional("dark", default=True): cv.boolean,
             }
         ),
@@ -57,7 +57,7 @@ async def ws_status(
         vol.Optional("image_filename"): str,
         vol.Optional("image_base64"): str,
         vol.Optional("activate", default=False): bool,
-        vol.Optional("set_for_user", default=False): bool,
+        vol.Optional("set_for_user", default=True): bool,
         vol.Optional("dark", default=True): bool,
     }
 )
@@ -147,7 +147,7 @@ async def _async_save(
 
 
 async def _async_set_theme_for_user(hass: HomeAssistant, user_id: str, theme_name: str, dark: bool) -> None:
-    """Store the theme on this connection's user. The caller cannot name another user."""
+    """Persist hass.selectedTheme for this user. The caller cannot name another user."""
     from homeassistant.components.frontend.storage import async_user_store
 
     store = await async_user_store(hass, user_id)

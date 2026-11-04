@@ -40,8 +40,8 @@ describe("IndieAuth URL", () => {
     expect(challenge).toMatch(/^[A-Za-z0-9_-]+$/);
     const href = buildAuthorizeUrl({
       haUrl: "https://home.example",
-      clientId: clientIdFromOrigin("https://themes.example"),
-      redirectUri: "https://themes.example/",
+      clientId: clientIdFromOrigin("https://hub.example"),
+      redirectUri: "https://hub.example/",
       state: "abc",
       codeChallenge: challenge,
     });
@@ -49,8 +49,8 @@ describe("IndieAuth URL", () => {
     expect(url.origin).toBe("https://home.example");
     expect(url.pathname).toBe("/auth/authorize");
     expect(url.searchParams.get("response_type")).toBe("code");
-    expect(url.searchParams.get("client_id")).toBe("https://themes.example/");
-    expect(url.searchParams.get("redirect_uri")).toBe("https://themes.example/");
+    expect(url.searchParams.get("client_id")).toBe("https://hub.example/");
+    expect(url.searchParams.get("redirect_uri")).toBe("https://hub.example/");
     expect(url.searchParams.get("code_challenge_method")).toBe("S256");
     expect(url.searchParams.get("code_challenge")).toBe(challenge);
   });

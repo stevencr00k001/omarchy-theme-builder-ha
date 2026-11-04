@@ -90,7 +90,10 @@ export function rewriteLovelaceBackground(yaml: string, imageFile: string | null
   if (!imageFile) return yaml;
   assertSafeImageFilename(imageFile);
   const css = `center / cover no-repeat fixed url(\\"/local/omarchy/${imageFile}\\")`;
-  return yaml.replace(/lovelace-background:\s*"(?:\\.|[^"\\])*"/, `lovelace-background: "${css}"`);
+  return yaml.replace(
+    /(lovelace-background|ha-panel-background):\s*"(?:\\.|[^"\\])*"/g,
+    `$1: "${css}"`,
+  );
 }
 
 export function buildAuthorizeUrl(input: {

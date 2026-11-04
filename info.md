@@ -1,10 +1,10 @@
 # Omarchy Themes
 
-Sidebar panel and theme saver for the Omarchy Theme Builder, by [Top End Smart Homes](https://www.topendsmarthomes.com.au/?utm_source=omarchy-theme-builder&utm_medium=integration&utm_campaign=info).
+Sidebar panel and theme saver by [Top End Smart Homes](https://www.topendsmarthomes.com.au/?utm_source=omarchy-theme-builder&utm_medium=integration&utm_campaign=info).
 
-After a restart, administrators get an **Omarchy Themes** item in the sidebar. It is the same builder as the website: palettes, all ten card styles, and a live preview. Wallpapers load from Omarchy’s GitHub repository when you open the panel. They are not stored in this integration.
+After a restart, administrators get an **Omarchy Themes** item in the sidebar. Palettes, all ten card styles, and a live preview are in that panel. Wallpapers load from Omarchy’s GitHub repository when you open it. They are not stored in this integration.
 
-**Apply** writes the theme into `config/themes` and the wallpaper into `config/www/omarchy`, reloads themes, and can select that theme for the signed-in user only.
+**Apply** writes the theme into `config/themes` and the wallpaper into `config/www/omarchy`, reloads themes, and selects that theme for the signed-in user.
 
 ## HACS
 
@@ -22,4 +22,4 @@ After a restart, administrators get an **Omarchy Themes** item in the sidebar. I
 
 Or add `omarchy_themes:` to `configuration.yaml` and restart.
 
-The public builder at themes.topendsmarthomes.com.au stays separate. This panel does not send your token or theme files there.
+More dashboards and smart home kits: [topendsmarthomes.com.au](https://www.topendsmarthomes.com.au/?utm_source=omarchy-theme-builder&utm_medium=integration&utm_campaign=info).

@@ -8,6 +8,7 @@ import {
   buildInstallReadme,
   buildTheme,
   quoteYaml,
+  THEME_VARIABLE_KEYS,
   themeToYaml,
   wallpaperExportName,
   type ThemeOptions,
@@ -106,11 +107,13 @@ describe("card styles", () => {
 
     const flat = buildTheme(nord(), options({ blur: false }));
     expect(flat.needsCardMod).toBe(false);
-    expect(flat.cardMod).toBeNull();
+    expect(flat.cardMod?.card).not.toContain("backdrop-filter");
+    expect(flat.cardMod?.root).toContain("hui-sections-view");
 
     const solid = buildTheme(nord(), options({ styleId: "solid", blur: false, opacity: 1 }));
     expect(solid.needsCardMod).toBe(false);
-    expect(themeToYaml(solid, "nord")).not.toContain("card-mod");
+    expect(themeToYaml(solid, "nord")).toContain('card-mod-theme:');
+    expect(themeToYaml(solid, "nord")).not.toContain("backdrop-filter");
 
     const solidBlur = buildTheme(nord(), options({ styleId: "solid", blur: true, blurPx: 8 }));
     expect(solidBlur.needsCardMod).toBe(true);
@@ -188,7 +191,30 @@ describe("yaml and readme", () => {
     const theme = buildTheme(nord(), options({ styleId: "minimal", blur: false, opacity: 1 }));
     const readme = buildInstallReadme(theme, "nord", "Wallpaper: none");
     expect(readme).toContain("does not need card-mod");
-    expect(themeToYaml(theme, "nord")).not.toContain("card-mod-theme");
+    expect(themeToYaml(theme, "nord")).toContain("card-mod-theme");
+    expect(themeToYaml(theme, "nord")).toContain("modes:");
+  });
+
+  it("includes every standard card variable in both modes", () => {
+    const theme = buildTheme(nord(), options());
+    const yaml = themeToYaml(theme, "nord");
+    for (const key of THEME_VARIABLE_KEYS) {
+      expect(theme.variables[key], key).toBeTruthy();
+      expect(theme.modes.light[key], `light ${key}`).toBeTruthy();
+      expect(theme.modes.dark[key], `dark ${key}`).toBeTruthy();
+      expect(yaml).toContain(`${key}:`);
+    }
+    expect(yaml).toContain("modes:");
+    expect(yaml).toContain("light:");
+    expect(yaml).toContain("dark:");
+    expect(theme.modes.dark["primary-background-color"]).toBe(theme.variables["primary-background-color"]);
+    expect(theme.modes.light["primary-background-color"]).not.toBe(theme.variables["primary-background-color"]);
+    expect(theme.variables["lovelace-background"]).toContain("/local/omarchy/");
+    expect(theme.modes.light["lovelace-background"]).toBe(theme.variables["lovelace-background"]);
+    expect(theme.modes.dark["ha-panel-background"]).toBe(theme.variables["ha-panel-background"]);
+    expect(theme.cardMod?.theme).toBe(theme.name);
+    expect(theme.cardMod?.card).toContain("ha-card");
+    expect(theme.cardMod?.root).toContain("hui-view");
   });
 
   it("sanitises wallpaper file names", () => {

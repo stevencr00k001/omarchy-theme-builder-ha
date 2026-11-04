@@ -39,6 +39,7 @@ ALLOWED_THEME_KEYS = frozenset(
         "divider-color",
         "app-header-background-color",
         "app-header-text-color",
+        "app-header-edit-background-color",
         "app-header-selection-bar-color",
         "sidebar-background-color",
         "sidebar-text-color",
@@ -57,7 +58,65 @@ ALLOWED_THEME_KEYS = frozenset(
         "switch-checked-button-color",
         "switch-unchecked-color",
         "slider-color",
+        "slider-secondary-color",
         "slider-track-color",
+        "slider-bar-color",
+        "light-primary-color",
+        "dark-primary-color",
+        "text-light-primary-color",
+        "error-state-color",
+        "warning-state-color",
+        "success-state-color",
+        "info-state-color",
+        "state-icon-unavailable-color",
+        "state-off-color",
+        "paper-item-icon-color",
+        "paper-item-icon-active-color",
+        "paper-card-background-color",
+        "switch-unchecked-button-color",
+        "label-badge-background-color",
+        "label-badge-text-color",
+        "label-badge-red",
+        "label-badge-green",
+        "label-badge-blue",
+        "label-badge-yellow",
+        "label-badge-grey",
+        "table-row-background-color",
+        "table-row-alternative-background-color",
+        "data-table-background-color",
+        "input-fill-color",
+        "input-ink-color",
+        "input-label-ink-color",
+        "input-disabled-ink-color",
+        "input-disabled-fill-color",
+        "input-dropdown-icon-color",
+        "markdown-code-background-color",
+        "mdc-theme-primary",
+        "mdc-theme-on-primary",
+        "mdc-theme-secondary",
+        "mdc-theme-on-secondary",
+        "tile-color",
+        "energy-grid-consumption-color",
+        "energy-grid-return-color",
+        "energy-solar-color",
+        "energy-battery-out-color",
+        "energy-battery-in-color",
+        "energy-gas-color",
+        "energy-water-color",
+        "ha-panel-background",
+        "mush-rgb-red",
+        "mush-rgb-pink",
+        "mush-rgb-purple",
+        "mush-rgb-blue",
+        "mush-rgb-cyan",
+        "mush-rgb-teal",
+        "mush-rgb-green",
+        "mush-rgb-yellow",
+        "mush-rgb-amber",
+        "mush-rgb-orange",
+        "mush-rgb-grey",
+        "mush-rgb-black",
+        "mush-rgb-white",
         "masonry-view-card-margin",
         "ha-view-sections-column-gap",
         "ha-view-sections-row-gap",
@@ -73,6 +132,8 @@ ALLOWED_THEME_KEYS = frozenset(
     }
 )
 _CSS_KEYS = frozenset({"card-mod-card", "card-mod-root"})
+_SURFACE_KEYS = frozenset({"lovelace-background", "ha-panel-background"})
+_MODE_SKIP = frozenset({"card-mod-theme", "card-mod-card", "card-mod-root", "modes"})
 
 
 class ThemeRejected(Exception):
@@ -147,7 +208,7 @@ def decode_image(payload: str) -> bytes:
     if len(data) > MAX_IMAGE_BYTES:
         raise ThemeRejected(
             "too_large",
-            "Wallpaper is too large to push. Download the zip instead, or use a smaller image.",
+            "Wallpaper is too large to push. Use a smaller image.",
         )
     if not data:
         raise ThemeRejected("invalid_image", "Wallpaper data is empty.")
@@ -197,26 +258,53 @@ def validate_theme_yaml(text: str, image_filename: str | None) -> tuple[str, str
         raise ThemeRejected("invalid_yaml", "Theme name contains characters that are not allowed.")
     if not isinstance(body, dict) or not body:
         raise ThemeRejected("invalid_yaml", "Theme variables must be a mapping.")
-    cleaned: dict[str, str] = {}
+    cleaned: dict[str, object] = {}
     for key, value in body.items():
+        if key == "modes":
+            continue
         if key not in ALLOWED_THEME_KEYS:
             raise ThemeRejected("invalid_yaml", "A theme variable is not allowed.")
-        if key == "lovelace-background":
+        if key in _SURFACE_KEYS:
             continue
         cleaned[key] = _clean_value(key, value)
-    if image_filename:
-        cleaned["lovelace-background"] = (
-            f'center / cover no-repeat fixed url("/local/omarchy/{image_filename}")'
-        )
-    elif "lovelace-background" in body:
-        background = body["lovelace-background"]
-        if not isinstance(background, str) or not _HEX_COLOR.fullmatch(background):
-            raise ThemeRejected("invalid_yaml", "Without a wallpaper, the background must be a hex colour.")
-        cleaned["lovelace-background"] = background.lower()
+    surface = _surface_value(body.get("lovelace-background"), image_filename)
+    cleaned["lovelace-background"] = surface
+    cleaned["ha-panel-background"] = surface
+    if "modes" in body:
+        cleaned["modes"] = _clean_modes(body["modes"], surface)
     dumped = yaml.safe_dump({name: cleaned}, sort_keys=False, allow_unicode=False)
     if "!!" in dumped:
         raise ThemeRejected("invalid_yaml", "Theme YAML could not be written safely.")
     return name, dumped
+
+
+def _surface_value(raw: object, image_filename: str | None) -> str:
+    if image_filename:
+        return f'center / cover no-repeat fixed url("/local/omarchy/{image_filename}")'
+    if not isinstance(raw, str) or not _HEX_COLOR.fullmatch(raw):
+        raise ThemeRejected("invalid_yaml", "Without a wallpaper, the background must be a hex colour.")
+    return raw.lower()
+
+
+def _clean_modes(raw: object, surface: str) -> dict[str, dict[str, str]]:
+    if not isinstance(raw, dict) or set(raw) != {"light", "dark"}:
+        raise ThemeRejected("invalid_yaml", "Theme modes must be light and dark.")
+    cleaned: dict[str, dict[str, str]] = {}
+    for mode in ("light", "dark"):
+        block = raw[mode]
+        if not isinstance(block, dict) or not block:
+            raise ThemeRejected("invalid_yaml", "Each theme mode must be a mapping.")
+        mode_vars: dict[str, str] = {}
+        for key, value in block.items():
+            if key in _MODE_SKIP or key not in ALLOWED_THEME_KEYS:
+                raise ThemeRejected("invalid_yaml", "A theme variable is not allowed.")
+            if key in _SURFACE_KEYS:
+                continue
+            mode_vars[key] = _clean_value(key, value)
+        mode_vars["lovelace-background"] = surface
+        mode_vars["ha-panel-background"] = surface
+        cleaned[mode] = mode_vars
+    return cleaned
 
 
 def _clean_value(key: str, value: object) -> str:

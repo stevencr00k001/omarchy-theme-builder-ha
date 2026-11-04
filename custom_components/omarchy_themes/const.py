@@ -1,7 +1,7 @@
 """Constants for the Omarchy Themes companion integration."""
 
 DOMAIN = "omarchy_themes"
-VERSION = "1.1.3"
+VERSION = "1.1.4"
 
 # Stay under Home Assistant's default 4 MiB websocket message limit after base64.
 MAX_YAML_BYTES = 200_000

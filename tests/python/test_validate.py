@@ -112,6 +112,28 @@ def test_write_theme_files_creates_only_the_expected_paths(tmp_path: Path) -> No
     assert not (tmp_path / "secrets.yaml").exists()
 
 
+def test_modes_and_card_variables_survive_validation() -> None:
+    raw = theme_yaml() + (
+        '  ha-card-background: "rgba(59, 66, 82, 0.58)"\n'
+        '  ha-panel-background: "#2e3440"\n'
+        '  tile-color: "#81a1c1"\n'
+        '  mush-rgb-blue: "129, 161, 193"\n'
+        "  modes:\n"
+        "    light:\n"
+        '      primary-background-color: "#eceff4"\n'
+        '      primary-text-color: "#2e3440"\n'
+        "    dark:\n"
+        '      primary-background-color: "#2e3440"\n'
+        '      primary-text-color: "#d8dee9"\n'
+    )
+    _name, dumped = validate_theme_yaml(raw, "nord--city.webp")
+    assert "modes:" in dumped
+    assert "ha-card-background" in dumped
+    assert "tile-color" in dumped
+    assert "mush-rgb-blue" in dumped
+    assert dumped.count("/local/omarchy/nord--city.webp") >= 3
+
+
 def test_rejects_unknown_keys_and_non_images() -> None:
     bad = theme_yaml() + '  shell: "rm -rf /"\n'
     with pytest.raises(ThemeRejected):

@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev -p 4317 -H 0.0.0.0",
     "build": "next build && node scripts/apply-csp.mjs",
-    "build:panel": "NEXT_PUBLIC_BASE_PATH=/omarchy_themes_static NEXT_PUBLIC_SITE_URL=https://themes.topendsmarthomes.com.au next build && node scripts/copy-panel.mjs",
+    "build:panel": "NEXT_PUBLIC_BASE_PATH=/omarchy_themes_static NEXT_PUBLIC_SITE_URL=https://www.topendsmarthomes.com.au next build && node scripts/copy-panel.mjs",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",

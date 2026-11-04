@@ -36,7 +36,7 @@ def test_manifest_version_and_hacs_metadata() -> None:
     hacs = json.loads((ROOT / "hacs.json").read_text())
     info = (ROOT / "info.md").read_text()
     readme = (ROOT / "README.md").read_text()
-    assert manifest["version"] == "1.1.3"
+    assert manifest["version"] == "1.1.4"
     assert manifest["dependencies"] == ["frontend", "http"]
     assert manifest["codeowners"] == ["@stevencr00k001"]
     assert manifest["documentation"] == "https://github.com/stevencr00k001/omarchy-theme-builder-ha"

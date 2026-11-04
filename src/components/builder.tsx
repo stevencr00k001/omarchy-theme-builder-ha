@@ -7,19 +7,14 @@ import { CARD_STYLES, cardModPlan, getCardStyle } from "@/lib/card-styles";
 import type { PaletteBundle } from "@/lib/bundle";
 import { asHex, resolvePalette } from "@/lib/colors";
 import { cardContrast, contrastLevel, opacityForContrast } from "@/lib/contrast";
-import { buildThemeZip, downloadBlob, fetchImageBytes } from "@/lib/export-zip";
-import {
-  buildInstallReadme,
-  buildTheme,
-  themeToYaml,
-  wallpaperExportName,
-} from "@/lib/ha-theme";
+import { fetchImageBytes } from "@/lib/export-zip";
+import { buildTheme, themeToYaml, wallpaperExportName } from "@/lib/ha-theme";
 import { teshUrl } from "@/lib/links";
 import { sampleWallpaperContrast, type SampledContrast } from "@/lib/sample-wallpaper";
 import { isPinnedWallpaperUrl } from "@/lib/wallpaper-url";
 import { encodeShare, resolveShare, type ShareState } from "@/lib/share";
+import { userThemeMessage } from "@/lib/embedded";
 import { DashboardPreview } from "@/components/dashboard-preview";
-import { HaConnectDialog } from "@/components/ha-connect-dialog";
 import {
   isSameOriginFrame,
   resolveEmbeddedHass,
@@ -35,14 +30,7 @@ import {
   shrinkForPush,
 } from "@/lib/ha-connect";
 import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
@@ -62,28 +50,11 @@ export function Builder() {
   const [sample, setSample] = useState<SampledContrast | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [exported, setExported] = useState(false);
-  const [shareUrl, setShareUrl] = useState("");
   const [wallpaperBroken, setWallpaperBroken] = useState(false);
-  const [connectOpen, setConnectOpen] = useState(false);
-  const [embedded, setEmbedded] = useState(false);
   const [embeddedHass, setEmbeddedHass] = useState<EmbeddedHass | null>(null);
-  const [useForMe, setUseForMe] = useState(true);
   const [applying, setApplying] = useState(false);
-  const [pendingOauth, setPendingOauth] = useState<{ code: string; state: string } | null>(null);
-  const [holdShareWrite, setHoldShareWrite] = useState(true);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get("code");
-    const oauthState = params.get("state");
-    if (code && oauthState) {
-      setPendingOauth({ code, state: oauthState });
-      setConnectOpen(true);
-    } else {
-      setHoldShareWrite(false);
-    }
     const resolved = resolveShare(window.location.search, themes, CARD_STYLES, FALLBACK_THEME);
     setState(resolved.state);
     setUploadMissing(resolved.uploadMissing);
@@ -91,12 +62,10 @@ export function Builder() {
   }, [themes]);
 
   useEffect(() => {
-    if (!hydrated || holdShareWrite) return;
+    if (!hydrated) return;
     const query = encodeShare({ ...state, bg: upload ? "upload" : state.bg });
-    const next = `${window.location.pathname}${query}`;
-    window.history.replaceState(null, "", next);
-    setShareUrl(`${window.location.origin}${next}`);
-  }, [hydrated, holdShareWrite, state, upload]);
+    window.history.replaceState(null, "", `${window.location.pathname}${query}`);
+  }, [hydrated, state, upload]);
 
   useEffect(() => {
     return () => {
@@ -108,7 +77,6 @@ export function Builder() {
     let stop = false;
     const look = async () => {
       if (!isSameOriginFrame(window)) return;
-      if (!stop) setEmbedded(true);
       const hass = await resolveEmbeddedHass(window);
       if (!stop && hass) setEmbeddedHass(hass);
     };
@@ -201,25 +169,6 @@ export function Builder() {
     setState((current) => ({ ...current, theme: id, bg: next.backgrounds[0]?.file ?? "" }));
   }
 
-  async function copyYaml() {
-    try {
-      await navigator.clipboard.writeText(yaml);
-      setNotice("YAML copied.");
-    } catch {
-      setNotice("Clipboard was blocked. Select the YAML from a downloaded zip instead.");
-    }
-  }
-
-  async function copyShare() {
-    const url = shareUrl || window.location.href;
-    try {
-      await navigator.clipboard.writeText(url);
-      setNotice("Preview link copied.");
-    } catch {
-      setNotice("Copy the link from the field below.");
-    }
-  }
-
   async function currentImage() {
     if (upload) {
       return {
@@ -258,58 +207,23 @@ export function Builder() {
         imageBase64 = bytesToBase64(shrunk.bytes);
         nextYaml = rewriteLovelaceBackground(yaml, imageFilename);
       }
+      const dark = palette.mode !== "light";
       await embeddedHass.callWS(
         saveThemeMessage({
           filename,
           yaml: nextYaml,
           imageFilename,
           imageBase64,
-          setForUser: useForMe,
-          dark: palette.mode !== "light",
+          setForUser: true,
+          dark,
         }),
       );
-      setNotice(
-        useForMe
-          ? `Applied ${built.name} for this user and reloaded themes.`
-          : `Saved ${built.name} and reloaded themes.`,
-      );
+      await embeddedHass.callWS(userThemeMessage(built.name, dark));
+      setNotice(`Applied ${built.name} for this user. It stays after a reload.`);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Could not apply the theme.");
     } finally {
       setApplying(false);
-    }
-  }
-
-  async function downloadZip() {
-    setBusy(true);
-    setError(null);
-    try {
-      let bytes: Uint8Array | null = null;
-      if (upload) bytes = new Uint8Array(await upload.file.arrayBuffer());
-      else if (wallpaper && !wallpaperBroken) bytes = await fetchImageBytes(wallpaper.url);
-      if (!bytes && imageFile) {
-        throw new Error("The wallpaper could not be fetched, so the zip was not saved. Copy YAML still works.");
-      }
-      const readme = buildInstallReadme(
-        built,
-        theme.id,
-        upload
-          ? "Wallpaper: uploaded in the builder and included in this zip."
-          : `Wallpaper file in Omarchy: ${wallpaper?.repoPath ?? "none"}.`,
-      );
-      const blob = await buildThemeZip({
-        yamlName: `${built.fileSlug}.yaml`,
-        yaml,
-        imageName: bytes ? imageFile : null,
-        imageBytes: bytes,
-        readme,
-      });
-      downloadBlob(blob, `${built.fileSlug}.zip`);
-      setExported(true);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Could not build the zip.");
-    } finally {
-      setBusy(false);
     }
   }
 
@@ -511,7 +425,7 @@ export function Builder() {
             </div>
             {upload ? (
               <p className="mt-2 text-xs text-[#4d5e62]">
-                Using {upload.name}. It stays in this browser until you download the zip.
+                Using {upload.name}. It stays in this browser until you apply the theme.
                 <button
                   type="button"
                   className="ml-2 underline"
@@ -643,108 +557,26 @@ export function Builder() {
               </ul>
             </div>
 
-            <div className="mt-4 space-y-3">
-              <div>
-                <h3 className="text-sm font-semibold">Save a file</h3>
-                <div className="mt-2 flex flex-col gap-2">
-                  <Button type="button" onClick={() => void downloadZip()} disabled={busy}>
-                    {busy ? "Preparing zip…" : "Download zip"}
-                  </Button>
-                  <Button type="button" variant="outline" onClick={() => void copyYaml()}>
-                    Copy YAML
-                  </Button>
-                </div>
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold">{embedded ? "Apply on this hub" : "Send it to your hub"}</h3>
-                <p className="mt-1 text-xs text-[#4d5e62]">
-                  {embedded
-                    ? "You are already signed in. Apply writes the theme here and reloads it. Nothing is sent to Top End Smart Homes."
-                    : "Push the theme from this browser. It does not go through Top End Smart Homes."}
-                </p>
-                {embedded ? (
-                  <>
-                    <div className="mt-3 flex items-center justify-between gap-3">
-                      <Label htmlFor="use-for-me">Use this theme for me only</Label>
-                      <Switch id="use-for-me" checked={useForMe} onCheckedChange={setUseForMe} />
-                    </div>
-                    <Button
-                      type="button"
-                      className="mt-2 w-full"
-                      onClick={() => void applyEmbedded()}
-                      disabled={!embeddedHass || applying}
-                    >
-                      {embeddedHass ? (applying ? "Applying…" : "Apply") : "Waiting for Home Assistant…"}
-                    </Button>
-                  </>
-                ) : (
-                  <Button type="button" className="mt-2 w-full" variant="secondary" onClick={() => setConnectOpen(true)}>
-                    Connect to Home Assistant
-                  </Button>
-                )}
-              </div>
-              <Button type="button" variant="outline" onClick={() => void copyShare()}>
-                Share preview link
+            <div className="mt-4">
+              <h3 className="text-sm font-semibold">Apply</h3>
+              <p className="mt-1 text-xs text-[#4d5e62]">
+                Saves the theme in config/themes, reloads themes, and selects it for this account.
+                Nothing is sent to Top End Smart Homes.
+              </p>
+              <Button
+                type="button"
+                className="mt-2 w-full"
+                onClick={() => void applyEmbedded()}
+                disabled={!embeddedHass || applying}
+              >
+                {embeddedHass ? (applying ? "Applying…" : "Apply") : "Waiting for Home Assistant…"}
               </Button>
             </div>
             {notice ? <p className="mt-2 text-xs text-[#0b3b3c]">{notice}</p> : null}
             {error ? <p className="mt-2 text-xs text-[#9f2d2d]">{error}</p> : null}
-            <Label htmlFor="share-url" className="mt-3 text-xs">
-              Shareable link
-            </Label>
-            <Input id="share-url" readOnly value={shareUrl || "Updating…"} className="mt-1 text-xs" />
-            <p className="mt-1 text-[11px] text-[#4d5e62]">
-              Theme, card style, wallpaper choice, and sliders are in the URL. Uploads stay on this device.
-            </p>
           </div>
         </section>
       </div>
-
-      {embedded ? null : (
-      <HaConnectDialog
-        open={connectOpen}
-        onOpenChange={setConnectOpen}
-        pendingOauth={pendingOauth}
-        onOauthSettled={() => {
-          setPendingOauth(null);
-          setHoldShareWrite(false);
-        }}
-        yaml={yaml}
-        themeFilename={`${built.fileSlug}.yaml`}
-        loadImage={currentImage}
-      />
-      )}
-
-      <Dialog open={exported} onOpenChange={setExported}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Theme downloaded</DialogTitle>
-            <DialogDescription>
-              The zip contains the theme YAML, the wallpaper, and the install steps. After you copy
-              them into your config, pick the theme in your profile.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="rounded-xl border border-[#e3dccf] bg-[#fbf6ee] p-4">
-            <p className="font-medium text-[#17262a]">Want the dashboard laid out already?</p>
-            <p className="mt-1 text-sm text-[#4d5e62]">
-              Top End Smart Homes publishes ready-made dashboard kits for Australian homes, and a
-              tutorials section if you are setting a hub up yourself.
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <a href={teshUrl("/kits", "export-kits")} className={buttonVariants()} rel="noopener noreferrer">
-                Dashboard kits
-              </a>
-              <a
-                href={teshUrl("/tutorials", "export-tutorials")}
-                className={buttonVariants({ variant: "outline" })}
-                rel="noopener noreferrer"
-              >
-                Tutorials
-              </a>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
