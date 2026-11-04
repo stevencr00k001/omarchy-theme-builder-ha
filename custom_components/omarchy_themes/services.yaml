@@ -1,0 +1,46 @@
+save_theme:
+  name: Save theme
+  description: >-
+    Write a theme YAML file into config/themes and an optional wallpaper into
+    config/www/omarchy, then reload themes. Administrator only.
+  fields:
+    filename:
+      name: Filename
+      description: Theme file name, such as omarchy-nord-frosted.yaml.
+      required: true
+      selector:
+        text:
+    yaml:
+      name: YAML
+      description: The theme file contents. One theme only.
+      required: true
+      selector:
+        text:
+          multiline: true
+    image_filename:
+      name: Wallpaper filename
+      description: File name under config/www/omarchy.
+      selector:
+        text:
+    image_base64:
+      name: Wallpaper base64
+      description: Base64-encoded wallpaper bytes. JPEG, PNG, or WebP only.
+      selector:
+        text:
+    set_for_user:
+      name: Select for this user
+      description: Save the theme on the calling user only. This does not change anyone else's theme.
+      selector:
+        boolean:
+    dark:
+      name: Dark
+      description: Whether that user's theme selection is the dark variant.
+      selector:
+        boolean:
+    activate:
+      name: Set as default theme
+      description: >-
+        Set the system default theme. This is separate from one user's profile.
+        A theme chosen in a profile still overrides the default.
+      selector:
+        boolean:
