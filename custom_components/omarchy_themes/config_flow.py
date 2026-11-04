@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
-from .const import DOMAIN
+from .const import DOMAIN, TESH_URL
 
 
 class OmarchyThemesConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -17,4 +17,7 @@ class OmarchyThemesConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
         if user_input is not None:
             return self.async_create_entry(title="Omarchy Themes", data={})
-        return self.async_show_form(step_id="user")
+        return self.async_show_form(
+            step_id="user",
+            description_placeholders={"more_info_url": TESH_URL},
+        )

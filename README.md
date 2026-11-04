@@ -2,7 +2,7 @@
 
 A free, static web app by [Top End Smart Homes](https://www.topendsmarthomes.com.au/?utm_source=omarchy-theme-builder&utm_medium=app&utm_campaign=readme). Pick a built-in [Omarchy](https://github.com/omacom/omarchy) palette, or your own wallpaper, and preview it on a mock Home Assistant dashboard. Card style is separate from the palette: frosted glass, a Nexus-style sheen, solid, outlined, terminal, Waybar, neon, minimal, matte, or tiled. Then download a theme you can install on your own hub.
 
-Wallpapers are not stored in this repository. The app loads them at runtime from Omarchy's public GitHub files, pinned to a commit. Uploaded pictures stay in the browser until you export.
+Wallpapers are not stored in this repository. The app loads them at runtime from Omarchy's public GitHub files, pinned to a commit. Those images remain the work of their authors. The MIT license covers the code in this repository only. Uploaded pictures stay in the browser until you export.
 
 ## Run locally
 

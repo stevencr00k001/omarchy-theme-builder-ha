@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Omarchy Themes",
-        "description": "Adds an Omarchy Themes sidebar panel for administrators and saves themes from the Omarchy Theme Builder by Top End Smart Homes. More dashboards and smart home kits: https://www.topendsmarthomes.com.au/?utm_source=omarchy-theme-builder&utm_medium=integration&utm_campaign=config-flow"
+        "description": "Adds an Omarchy Themes sidebar panel for administrators and saves themes from the Omarchy Theme Builder by Top End Smart Homes. [More dashboards and smart home kits]({more_info_url})."
       }
     },
     "abort": {

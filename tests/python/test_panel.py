@@ -33,7 +33,8 @@ def test_manifest_version_and_hacs_metadata() -> None:
     hacs = json.loads((ROOT / "hacs.json").read_text())
     info = (ROOT / "info.md").read_text()
     readme = (ROOT / "README.md").read_text()
-    assert manifest["version"] == "1.1.0"
+    assert manifest["version"] == "1.1.1"
+    assert manifest["dependencies"] == ["frontend", "http"]
     assert manifest["codeowners"] == ["@stevencr00k001"]
     assert manifest["documentation"] == "https://github.com/stevencr00k001/omarchy-theme-builder-ha"
     assert manifest["issue_tracker"].endswith("/issues")
@@ -43,3 +44,9 @@ def test_manifest_version_and_hacs_metadata() -> None:
     assert "HACS" in info and "HACS" in readme
     assert "Works with Home Assistant" not in info
     assert "Works with Home Assistant" not in readme
+    strings = json.loads(
+        (ROOT / "custom_components" / "omarchy_themes" / "strings.json").read_text()
+    )
+    description = strings["config"]["step"]["user"]["description"]
+    assert "{more_info_url}" in description
+    assert "http://" not in description and "https://" not in description
