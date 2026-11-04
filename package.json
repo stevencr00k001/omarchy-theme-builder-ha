@@ -37,6 +37,9 @@
     "typescript": "5.9.3",
     "vitest": "4.1.12"
   },
+  "overrides": {
+    "postcss": "8.5.32"
+  },
   "description": "Preview Omarchy themes on a Home Assistant dashboard and export a theme. A free tool by Top End Smart Homes.",
   "license": "MIT"
 }
