@@ -10,6 +10,12 @@ const geist = Geist({
 
 const site = process.env.NEXT_PUBLIC_SITE_URL || process.env.CF_PAGES_URL;
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover" as const,
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(site || "http://127.0.0.1:4317"),
   title: "Omarchy Theme Builder for Home Assistant · Top End Smart Homes",
@@ -50,8 +56,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
-      <body className={`${geist.variable} antialiased`}>{children}</body>
+    <html lang="en" className={`${geist.variable} font-sans`}>
+      <body className="antialiased">{children}</body>
     </html>
   );
 }

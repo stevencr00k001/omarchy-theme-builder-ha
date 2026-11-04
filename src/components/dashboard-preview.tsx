@@ -52,7 +52,7 @@ export function DashboardPreview({
       <div
         id="preview"
         data-testid="dashboard-preview"
-        className="relative h-[680px] overflow-hidden border border-black/10 shadow-[0_24px_60px_rgba(23,38,42,0.18)]"
+        className="relative h-[420px] max-w-full overflow-hidden border border-black/10 shadow-[0_24px_60px_rgba(23,38,42,0.18)] sm:h-[520px] lg:h-[640px]"
         style={{
           borderRadius: 22,
           background: look.background,

@@ -328,8 +328,8 @@ export function Builder() {
         .
       </p>
 
-      <div className="mt-6 grid items-start gap-6 lg:grid-cols-[240px_minmax(0,1fr)_320px]">
-        <section className="rounded-2xl border border-[#e3dccf] bg-[#fffcf7] p-3 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-auto">
+      <div className="mt-6 grid min-w-0 grid-cols-1 items-start gap-4 sm:gap-6 lg:grid-cols-[minmax(0,240px)_minmax(0,1fr)] xl:grid-cols-[240px_minmax(0,1fr)_320px]">
+        <section className="min-w-0 rounded-2xl border border-[#e3dccf] bg-[#fffcf7] p-3 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-hidden">
           <h2 className="px-1 text-sm font-semibold">Omarchy theme</h2>
           <Label className="sr-only" htmlFor="theme-filter">
             Filter themes
@@ -341,7 +341,7 @@ export function Builder() {
             placeholder="Filter themes"
             className="mt-2"
           />
-          <div className="mt-2 space-y-1">
+          <div className="mt-2 flex gap-2 overflow-x-auto overscroll-x-contain pb-1 lg:max-h-[calc(100vh-10rem)] lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto">
             {visibleThemes.map((item) => {
               const resolved = resolvePalette(item.colors);
               const accent = asHex(resolved.accent) ?? asHex(resolved.blue) ?? "#127c78";
@@ -354,15 +354,15 @@ export function Builder() {
                   type="button"
                   data-testid={`theme-${item.id}`}
                   onClick={() => chooseTheme(item.id)}
-                  className={`flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left ${selected ? "bg-[#e5f6f3] ring-2 ring-[#127c78]" : "hover:bg-[#f3eee4]"}`}
+                  className={`flex min-h-11 w-max shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-left lg:w-full ${selected ? "bg-[#e5f6f3] ring-2 ring-[#127c78]" : "hover:bg-[#f3eee4]"}`}
                 >
                   <span className="flex shrink-0">
                     {[bg, accent, fg].map((color) => (
                       <span key={color} className="size-4 first:rounded-l-full last:rounded-r-full" style={{ background: color }} />
                     ))}
                   </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium">{item.name}</span>
+                  <span className="shrink-0 lg:min-w-0 lg:flex-1 lg:shrink">
+                    <span className="block text-sm font-medium whitespace-nowrap lg:truncate">{item.name}</span>
                     <span className="text-[11px] text-[#4d5e62]">{resolved.mode === "light" ? "Light" : "Dark"}</span>
                   </span>
                 </button>
@@ -374,7 +374,7 @@ export function Builder() {
           </div>
         </section>
 
-        <section className="min-w-0 lg:sticky lg:top-20">
+        <section className="min-w-0 lg:sticky lg:top-20 lg:self-start">
           <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
             <div>
               <h2 className="text-xl font-semibold tracking-tight">
@@ -406,7 +406,7 @@ export function Builder() {
           />
         </section>
 
-        <section className="space-y-4">
+        <section className="min-w-0 space-y-4 lg:col-span-2 xl:col-span-1">
           <div className="rounded-2xl border border-[#e3dccf] bg-[#fffcf7] p-4">
             <h2 className="text-sm font-semibold">Card style</h2>
             <p className="mt-1 text-xs text-[#4d5e62]">
@@ -432,7 +432,7 @@ export function Builder() {
                     type="button"
                     data-testid={`style-${item.id}`}
                     onClick={() => chooseStyle(item.id)}
-                    className={`rounded-xl border p-2 text-left ${selected ? "border-[#127c78] bg-[#e5f6f3]" : "border-[#e3dccf] bg-white"}`}
+                    className={`min-h-11 rounded-xl border p-2 text-left ${selected ? "border-[#127c78] bg-[#e5f6f3]" : "border-[#e3dccf] bg-white"}`}
                   >
                     <span
                       className="mb-2 block h-8"
@@ -474,7 +474,7 @@ export function Builder() {
                       setWallpaperBroken(false);
                       setState((current) => ({ ...current, bg: item.file }));
                     }}
-                    className={`relative h-14 w-20 shrink-0 overflow-hidden rounded-lg border-2 ${selected ? "border-[#127c78]" : "border-transparent"}`}
+                    className={`relative h-14 min-h-11 w-20 shrink-0 overflow-hidden rounded-lg border-2 ${selected ? "border-[#127c78]" : "border-transparent"}`}
                     title={item.file}
                   >
                     {isPinnedWallpaperUrl(item.url) ? (
@@ -556,7 +556,7 @@ export function Builder() {
                   }}
                 />
               </div>
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex min-h-11 items-center justify-between gap-3">
                 <Label htmlFor="blur">Frosted blur</Label>
                 <Switch
                   id="blur"
