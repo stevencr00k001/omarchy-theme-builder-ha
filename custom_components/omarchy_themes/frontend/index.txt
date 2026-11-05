@@ -1,7 +1,7 @@
 1:"$Sreact.fragment"
 2:I[9766,[],""]
 3:I[8924,[],""]
-4:I[2409,["690","static/chunks/690-cebe9c02275b05fb.js","974","static/chunks/app/page-c1beff726848916c.js"],"Builder"]
+4:I[2409,["690","static/chunks/690-cebe9c02275b05fb.js","974","static/chunks/app/page-80009f487c1f98f6.js"],"Builder"]
 9:I[7150,[],""]
 :HL["/omarchy_themes_static/_next/static/media/22a5144ee8d83bca-s.p.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
 :HL["/omarchy_themes_static/_next/static/css/451b064fde8e7c96.css","style"]

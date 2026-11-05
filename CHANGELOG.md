@@ -18,7 +18,8 @@
   builder stops polling once it finds Home Assistant.
 - Malformed percent-encoded wallpaper URLs are rejected instead of throwing.
 - CI: main/PR triggers, read-only permissions, concurrency, lint/typecheck/build steps, a check that the
-  committed panel bundle matches the source (fixed Next.js build id), and `ignore: brands` for HACS.
+  committed panel bundle matches the source (fixed Next.js build id, and webpack module ids no longer
+  depend on the checkout path), and `ignore: brands` for HACS.
 
 ## 1.1.4
 - Apply a complete theme and drop the download UI.
