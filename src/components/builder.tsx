@@ -243,7 +243,7 @@ export function Builder() {
       </p>
 
       <div className="mt-6 grid min-w-0 grid-cols-1 items-start gap-4 sm:gap-6 lg:grid-cols-[minmax(0,240px)_minmax(0,1fr)] xl:grid-cols-[240px_minmax(0,1fr)_320px]">
-        <section className="min-w-0 rounded-2xl border border-[#e3dccf] bg-[#fffcf7] p-3 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-hidden">
+        <section className="min-w-0 rounded-2xl border border-[#e3dccf] bg-[#fffcf7] p-3 lg:row-span-2 xl:row-span-1 xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-hidden">
           <h2 className="px-1 text-sm font-semibold">Omarchy theme</h2>
           <Label className="sr-only" htmlFor="theme-filter">
             Filter themes
@@ -255,7 +255,7 @@ export function Builder() {
             placeholder="Filter themes"
             className="mt-2"
           />
-          <div className="mt-2 flex gap-2 overflow-x-auto overscroll-x-contain pb-1 lg:max-h-[calc(100vh-10rem)] lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto">
+          <div className="mt-2 flex gap-2 overflow-x-auto overscroll-x-contain pb-1 lg:max-h-[70vh] xl:max-h-[calc(100vh-7rem)] lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto">
             {visibleThemes.map((item) => {
               const resolved = resolvePalette(item.colors);
               const accent = asHex(resolved.accent) ?? asHex(resolved.blue) ?? "#127c78";
@@ -288,7 +288,7 @@ export function Builder() {
           </div>
         </section>
 
-        <section className="min-w-0 lg:sticky lg:top-20 lg:self-start">
+        <section className="min-w-0 xl:sticky xl:top-4 xl:self-start">
           <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
             <div>
               <h2 className="text-xl font-semibold tracking-tight">
@@ -320,7 +320,7 @@ export function Builder() {
           />
         </section>
 
-        <section className="min-w-0 space-y-4 lg:col-span-2 xl:col-span-1">
+        <section className="min-w-0 space-y-4 lg:col-start-2 xl:col-start-auto">
           <div className="rounded-2xl border border-[#e3dccf] bg-[#fffcf7] p-4">
             <h2 className="text-sm font-semibold">Card style</h2>
             <p className="mt-1 text-xs text-[#4d5e62]">
