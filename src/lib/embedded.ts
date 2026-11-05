@@ -86,16 +86,3 @@ export function saveThemeMessage(input: {
     dark: Boolean(input.dark),
   };
 }
-
-/**
- * Home Assistant stores the profile theme under the user-data key "theme".
- * The frontend copies that value onto hass.selectedTheme, which survives
- * reloads and other browsers signed in as the same user.
- */
-export function userThemeMessage(themeName: string, dark: boolean): Record<string, unknown> {
-  return {
-    type: "frontend/set_user_data",
-    key: "theme",
-    value: { theme: themeName, dark },
-  };
-}

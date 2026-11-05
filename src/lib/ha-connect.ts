@@ -384,11 +384,20 @@ export async function shrinkForPush(
   mime: string,
 ): Promise<{ bytes: Uint8Array; extension: string }> {
   const extension = extensionForMime(mime);
-  if (bytes.byteLength <= MAX_PUSH_IMAGE_BYTES) return { bytes, extension };
+  // The companion only accepts PNG, JPEG, and WebP. Anything else is re-encoded.
+  if (extension && bytes.byteLength <= MAX_PUSH_IMAGE_BYTES) return { bytes, extension };
   const copy = new Uint8Array(bytes.byteLength);
   copy.set(bytes);
   const blob = new Blob([copy], { type: mime || "application/octet-stream" });
-  const bitmap = await createImageBitmap(blob);
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(blob);
+  } catch {
+    throw new HaCommandError(
+      "invalid_image",
+      "This browser could not read that wallpaper. Use a JPEG, PNG, or WebP image.",
+    );
+  }
   const scale = Math.min(1, 1920 / Math.max(bitmap.width, bitmap.height));
   const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.round(bitmap.width * scale));
@@ -414,12 +423,12 @@ export async function shrinkForPush(
   return { bytes: shrunk, extension: "jpg" };
 }
 
-function extensionForMime(mime: string): string {
-  if (mime.includes("png")) return "png";
-  if (mime.includes("webp")) return "webp";
-  if (mime.includes("gif")) return "gif";
-  if (mime.includes("avif")) return "avif";
-  return "jpg";
+/** Extension for a type the companion accepts, or null when the image must be re-encoded. */
+function extensionForMime(mime: string): string | null {
+  if (mime === "image/png") return "png";
+  if (mime === "image/webp") return "webp";
+  if (mime === "image/jpeg" || mime === "image/jpg") return "jpg";
+  return null;
 }
 
 export function replaceExtension(filename: string, extension: string): string {

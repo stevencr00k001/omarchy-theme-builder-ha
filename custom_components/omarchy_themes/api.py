@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ServiceValidationError, Unauthorized
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN, VERSION
@@ -32,6 +33,11 @@ async def async_register(hass: HomeAssistant) -> None:
             }
         ),
     )
+
+
+def async_unregister(hass: HomeAssistant) -> None:
+    """Remove the save service. Websocket commands cannot be unregistered and are admin-only."""
+    hass.services.async_remove(DOMAIN, "save_theme")
 
 
 @websocket_api.websocket_command({vol.Required("type"): "omarchy_themes/status"})
@@ -90,7 +96,7 @@ async def ws_save(
 async def _async_save_service(call: ServiceCall) -> None:
     user = await call.hass.auth.async_get_user(call.context.user_id) if call.context.user_id else None
     if user is None or not user.is_admin:
-        raise vol.Invalid("An administrator must save the theme.")
+        raise Unauthorized(context=call.context, permission="admin")
     try:
         await _async_save(
             call.hass,
@@ -104,7 +110,7 @@ async def _async_save_service(call: ServiceCall) -> None:
             dark=bool(call.data.get("dark", True)),
         )
     except ThemeRejected as err:
-        raise vol.Invalid(str(err)) from err
+        raise ServiceValidationError(str(err)) from err
 
 
 async def _async_save(

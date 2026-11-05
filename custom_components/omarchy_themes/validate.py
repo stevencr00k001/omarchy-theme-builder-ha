@@ -263,7 +263,7 @@ def validate_theme_yaml(text: str, image_filename: str | None) -> tuple[str, str
         if key == "modes":
             continue
         if key not in ALLOWED_THEME_KEYS:
-            raise ThemeRejected("invalid_yaml", "A theme variable is not allowed.")
+            raise ThemeRejected("invalid_yaml", f"{_label(key)} is not an allowed theme variable.")
         if key in _SURFACE_KEYS:
             continue
         cleaned[key] = _clean_value(key, value)
@@ -271,7 +271,7 @@ def validate_theme_yaml(text: str, image_filename: str | None) -> tuple[str, str
     cleaned["lovelace-background"] = surface
     cleaned["ha-panel-background"] = surface
     if "modes" in body:
-        cleaned["modes"] = _clean_modes(body["modes"], surface)
+        cleaned["modes"] = _clean_modes(body["modes"], surface, image_filename)
     dumped = yaml.safe_dump({name: cleaned}, sort_keys=False, allow_unicode=False)
     if "!!" in dumped:
         raise ThemeRejected("invalid_yaml", "Theme YAML could not be written safely.")
@@ -286,7 +286,7 @@ def _surface_value(raw: object, image_filename: str | None) -> str:
     return raw.lower()
 
 
-def _clean_modes(raw: object, surface: str) -> dict[str, dict[str, str]]:
+def _clean_modes(raw: object, surface: str, image_filename: str | None) -> dict[str, dict[str, str]]:
     if not isinstance(raw, dict) or set(raw) != {"light", "dark"}:
         raise ThemeRejected("invalid_yaml", "Theme modes must be light and dark.")
     cleaned: dict[str, dict[str, str]] = {}
@@ -297,24 +297,45 @@ def _clean_modes(raw: object, surface: str) -> dict[str, dict[str, str]]:
         mode_vars: dict[str, str] = {}
         for key, value in block.items():
             if key in _MODE_SKIP or key not in ALLOWED_THEME_KEYS:
-                raise ThemeRejected("invalid_yaml", "A theme variable is not allowed.")
+                raise ThemeRejected(
+                    "invalid_yaml", f"{_label(key)} is not an allowed theme variable in the {mode} mode."
+                )
             if key in _SURFACE_KEYS:
                 continue
             mode_vars[key] = _clean_value(key, value)
-        mode_vars["lovelace-background"] = surface
-        mode_vars["ha-panel-background"] = surface
+        # invertMode gives the opposite mode its own background colour. Keep it when
+        # there is no wallpaper; with a wallpaper both modes share the url() surface.
+        raw_bg = block.get("lovelace-background")
+        if image_filename or raw_bg is None:
+            mode_surface = surface
+        else:
+            mode_surface = _surface_value(raw_bg, None)  # requires #rrggbb
+        mode_vars["lovelace-background"] = mode_surface
+        mode_vars["ha-panel-background"] = mode_surface
         cleaned[mode] = mode_vars
     return cleaned
 
 
+def _label(key: object) -> str:
+    """Quote a theme key for an error message, truncated so a hostile key stays short."""
+    text = str(key)
+    return f'"{text[:60]}..."' if len(text) > 60 else f'"{text}"'
+
+
 def _clean_value(key: str, value: object) -> str:
+    # YAML reads `ha-card-border-width: 1` as an int. Numbers are valid CSS values, so
+    # keep them. Booleans are rejected: `yes` and `on` parse as True and are never intended.
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        value = str(value)
     if not isinstance(value, str) or not value or "\x00" in value:
-        raise ThemeRejected("invalid_yaml", "Theme variables must be plain text.")
+        raise ThemeRejected("invalid_yaml", f"{_label(key)} must be plain text or a number.")
     limit = 8000 if key in _CSS_KEYS else 2000
-    if len(value) > limit or _UNSAFE_VALUE.search(value):
-        raise ThemeRejected("invalid_yaml", "A theme variable contains text that is not allowed.")
+    if len(value) > limit:
+        raise ThemeRejected("invalid_yaml", f"{_label(key)} is longer than {limit} characters.")
+    if _UNSAFE_VALUE.search(value):
+        raise ThemeRejected("invalid_yaml", f"{_label(key)} contains text that is not allowed.")
     if key not in _CSS_KEYS and "\n" in value:
-        raise ThemeRejected("invalid_yaml", "A theme variable contains text that is not allowed.")
+        raise ThemeRejected("invalid_yaml", f"{_label(key)} cannot span several lines.")
     return value
 
 

@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
   output: "export",
   images: { unoptimized: true },
   poweredByHeader: false,
+  // A fixed build id keeps the committed panel bundle reproducible, so CI can diff it.
+  generateBuildId: async () => "omarchy-themes",
   productionBrowserSourceMaps: false,
   ...(basePath
     ? {

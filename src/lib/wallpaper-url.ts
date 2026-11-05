@@ -14,7 +14,12 @@ export function isPinnedWallpaperUrl(value: string): boolean {
   if (url.hostname !== "raw.githubusercontent.com") return false;
   const prefix = `/${OMARCHY_REPO}/${OMARCHY_COMMIT}/themes/`;
   if (!url.pathname.startsWith(prefix)) return false;
-  const rest = decodeURIComponent(url.pathname.slice(prefix.length));
+  let rest: string;
+  try {
+    rest = decodeURIComponent(url.pathname.slice(prefix.length));
+  } catch {
+    return false;
+  }
   return FILE.test(rest) && !rest.includes("..");
 }
 

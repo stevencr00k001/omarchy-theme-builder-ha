@@ -2,7 +2,15 @@ name: CI
 
 on:
   push:
+    branches: [main]
   pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -14,7 +22,12 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run lint
+      - run: npx tsc --noEmit
       - run: npm test
+      - run: npm run build
+      - name: Committed panel bundle matches the source
+        run: npm run build:panel && git diff --exit-code custom_components/omarchy_themes/frontend
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -36,3 +49,5 @@ jobs:
       - uses: hacs/action@main
         with:
           category: integration
+          # Remove once the brand is registered in home-assistant/brands.
+          ignore: brands

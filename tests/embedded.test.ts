@@ -4,7 +4,6 @@ import {
   isSameOriginFrame,
   resolveEmbeddedHass,
   saveThemeMessage,
-  userThemeMessage,
   type EmbeddedWindow,
 } from "@/lib/embedded";
 
@@ -92,10 +91,5 @@ describe("embedded Home Assistant detection", () => {
       dark: true,
     });
     expect(saveThemeMessage({ filename: "omarchy-nord.yaml", yaml: "a: b" })).not.toHaveProperty("user_id");
-    expect(userThemeMessage("Omarchy Nord - Frosted glass", true)).toEqual({
-      type: "frontend/set_user_data",
-      key: "theme",
-      value: { theme: "Omarchy Nord - Frosted glass", dark: true },
-    });
   });
 });

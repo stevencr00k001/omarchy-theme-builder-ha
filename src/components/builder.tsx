@@ -13,7 +13,6 @@ import { teshUrl } from "@/lib/links";
 import { sampleWallpaperContrast, type SampledContrast } from "@/lib/sample-wallpaper";
 import { isPinnedWallpaperUrl } from "@/lib/wallpaper-url";
 import { encodeShare, resolveShare, type ShareState } from "@/lib/share";
-import { userThemeMessage } from "@/lib/embedded";
 import { DashboardPreview } from "@/components/dashboard-preview";
 import {
   isSameOriginFrame,
@@ -75,14 +74,21 @@ export function Builder() {
 
   useEffect(() => {
     let stop = false;
+    let interval = 0;
+    let stopTimer = 0;
     const look = async () => {
       if (!isSameOriginFrame(window)) return;
       const hass = await resolveEmbeddedHass(window);
-      if (!stop && hass) setEmbeddedHass(hass);
+      if (stop || !hass) return;
+      // Found it: stop polling before setting, so the connection is set once.
+      stop = true;
+      window.clearInterval(interval);
+      window.clearTimeout(stopTimer);
+      setEmbeddedHass(hass);
     };
+    interval = window.setInterval(() => void look(), 500);
+    stopTimer = window.setTimeout(() => window.clearInterval(interval), 8000);
     void look();
-    const interval = window.setInterval(() => void look(), 500);
-    const stopTimer = window.setTimeout(() => window.clearInterval(interval), 8000);
     return () => {
       stop = true;
       window.clearInterval(interval);
@@ -97,7 +103,7 @@ export function Builder() {
   const previewUrl = upload?.url ?? wallpaper?.url ?? null;
   const imageFile = upload
     ? wallpaperExportName(theme.id, upload.name)
-    : wallpaper
+    : wallpaper && !wallpaperBroken
       ? wallpaperExportName(theme.id, wallpaper.file)
       : null;
 
@@ -181,11 +187,9 @@ export function Builder() {
     const bytes = await fetchImageBytes(wallpaper.url);
     const mime = wallpaper.file.endsWith(".png")
       ? "image/png"
-      : wallpaper.file.endsWith(".gif")
-        ? "image/gif"
-        : wallpaper.file.endsWith(".jpg") || wallpaper.file.endsWith(".jpeg")
-          ? "image/jpeg"
-          : "image/webp";
+      : wallpaper.file.endsWith(".jpg") || wallpaper.file.endsWith(".jpeg")
+        ? "image/jpeg"
+        : "image/webp";
     return { bytes, filename: imageFile, mime };
   }
 
@@ -218,7 +222,6 @@ export function Builder() {
           dark,
         }),
       );
-      await embeddedHass.callWS(userThemeMessage(built.name, dark));
       setNotice(`Applied ${built.name} for this user. It stays after a reload.`);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Could not apply the theme.");

@@ -153,3 +153,65 @@ def test_write_rejects_a_path_escape(tmp_path: Path) -> None:
 
 def _webp() -> bytes:
     return b"RIFF" + b"\x00\x00\x00\x00" + b"WEBP" + b"\x00" * 8
+
+
+def _body(lines: str) -> str:
+    return '"Omarchy Nord - Frosted glass":\n  primary-color: "#81a1c1"\n  lovelace-background: "#2e3440"\n' + lines
+
+
+def test_numeric_values_are_kept_as_text() -> None:
+    _, dumped = validate_theme_yaml(_body("  ha-card-border-width: 1\n  ha-card-border-radius: 12.5\n"), None)
+    assert "ha-card-border-width: '1'" in dumped
+    assert "ha-card-border-radius: '12.5'" in dumped
+
+
+def test_boolean_values_are_rejected() -> None:
+    with pytest.raises(ThemeRejected):
+        validate_theme_yaml(_body("  ha-card-border-width: yes\n"), None)
+
+
+@pytest.mark.parametrize(
+    ("line", "key"),
+    [
+        ('  shell: "rm -rf /"\n', "shell"),
+        ('  primary-color: "url(http://x)"\n', "primary-color"),  # overrides the earlier value
+        ('  ha-card-background: "a\\nb"\n', "ha-card-background"),
+    ],
+)
+def test_rejection_names_the_key(line: str, key: str) -> None:
+    with pytest.raises(ThemeRejected) as err:
+        validate_theme_yaml(_body(line), None)
+    assert f'"{key}"' in str(err.value)
+
+
+def _modes(light_bg: str) -> str:
+    return (
+        "  modes:\n"
+        "    light:\n"
+        '      primary-color: "#5e81ac"\n'
+        f'      lovelace-background: "{light_bg}"\n'
+        "    dark:\n"
+        '      primary-color: "#81a1c1"\n'
+        '      lovelace-background: "#2e3440"\n'
+    )
+
+
+def test_modes_keep_their_own_background_without_a_wallpaper() -> None:
+    import yaml
+
+    _, dumped = validate_theme_yaml(_body(_modes("#eceff4")), None)
+    theme = next(iter(yaml.safe_load(dumped).values()))
+    assert theme["lovelace-background"] == "#2e3440"
+    assert theme["modes"]["light"]["lovelace-background"] == "#eceff4"
+    assert theme["modes"]["light"]["ha-panel-background"] == "#eceff4"
+    assert theme["modes"]["dark"]["lovelace-background"] == "#2e3440"
+
+
+def test_modes_share_the_wallpaper_surface() -> None:
+    import yaml
+
+    _, dumped = validate_theme_yaml(_body(_modes("#eceff4")), "nord--city.webp")
+    theme = next(iter(yaml.safe_load(dumped).values()))
+    for mode in ("light", "dark"):
+        assert "url(" in theme["modes"][mode]["lovelace-background"]
+        assert theme["modes"][mode]["ha-panel-background"] == theme["lovelace-background"]

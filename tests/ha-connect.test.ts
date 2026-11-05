@@ -88,6 +88,12 @@ describe("push payload checks", () => {
     expect(isPinnedWallpaperUrl(pinned.replace("/backgrounds/", "/../../secrets/"))).toBe(false);
   });
 
+  it("returns false for a malformed percent-encoded path segment", () => {
+    const pinned =
+      "https://raw.githubusercontent.com/omacom/omarchy/cc99764098af5a2ed5cf2245d9059f4d559650f5/themes/nord/backgrounds/1-city-view.webp";
+    expect(isPinnedWallpaperUrl(pinned.replace("1-city-view", "%E0%A4%A"))).toBe(false);
+  });
+
   it("warns before storing a token", () => {
     expect(REMEMBER_WARNING).toContain("local storage");
     expect(REMEMBER_WARNING).toContain("shared computer");

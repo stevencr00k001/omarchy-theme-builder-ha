@@ -39,6 +39,11 @@ async def async_unload_entry(hass, entry) -> bool:
         from .frontend_panel import async_remove_frontend
 
         async_remove_frontend(hass)
+        from .api import async_unregister
+
+        async_unregister(hass)
+        # Let a reload register the service again.
+        hass.data[DOMAIN][_COMMANDS] = False
     return True
 
 

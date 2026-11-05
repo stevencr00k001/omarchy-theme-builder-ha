@@ -148,7 +148,11 @@ def _load_integration():
     async def async_register(hass):
         commands.append("commands")
 
+    def async_unregister(hass):
+        commands.append("unregister")
+
     api.async_register = async_register
+    api.async_unregister = async_unregister
     sys.modules["omarchy_themes.api"] = api
     import omarchy_themes as integration
     from omarchy_themes import frontend_panel
@@ -182,12 +186,15 @@ def test_register_panel_uses_keyword_arguments_and_reload() -> None:
 
         assert await integration.async_unload_entry(hass, None) is True
         assert "omarchy-themes" not in panels
+        assert commands == ["commands", "unregister"]
+        assert hass.data[integration.DOMAIN][integration._COMMANDS] is False
 
         await integration.async_setup_entry(hass, None)
         assert panels["omarchy-themes"]["frontend_url_path"] == "omarchy-themes"
         assert panels["omarchy-themes"]["require_admin"] is True
         assert panels["omarchy-themes"]["update"] is True
-        assert commands == ["commands"]
+        # A reload registers the save service again.
+        assert commands == ["commands", "unregister", "commands"]
         assert len(hass.static_paths) == 1
 
         hass.data[integration.DOMAIN][integration._YAML] = True
