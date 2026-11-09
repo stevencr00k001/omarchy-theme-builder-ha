@@ -6,7 +6,15 @@ After a restart, administrators get an **Omarchy Themes** item in the sidebar. P
 
 **Apply** writes the theme into `config/themes` and the wallpaper into `config/www/omarchy`, reloads themes, and selects that theme for the signed-in user.
 
-## HACS
+## Marketplace (Home Assistant 2026.11 or newer)
+
+1. Settings → Marketplace → Add from link.
+2. Paste `https://github.com/stevencr00k001/omarchy-theme-builder-ha`.
+3. Install Omarchy Themes.
+4. Restart Home Assistant if asked.
+5. Settings → Devices & services → Add integration → Omarchy Themes.
+
+## HACS (Home Assistant 2026.10 or older)
 
 1. HACS → Integrations → Custom repositories.
 2. Add `https://github.com/stevencr00k001/omarchy-theme-builder-ha`. Category: Integration.

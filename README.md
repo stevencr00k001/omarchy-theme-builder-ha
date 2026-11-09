@@ -6,7 +6,15 @@ Wallpapers are not stored in this repository. The panel loads them at runtime fr
 
 ## Install
 
-### HACS
+### Marketplace (Home Assistant 2026.11 or newer)
+
+1. Settings → Marketplace.
+2. Select **Add from link** and paste `https://github.com/stevencr00k001/omarchy-theme-builder-ha` (custom repositories need a GitHub connection).
+3. Install **Omarchy Themes**.
+4. Restart Home Assistant if a repair asks you to.
+5. Settings → Devices & services → Add integration → Omarchy Themes.
+
+### HACS (Home Assistant 2026.10 or older)
 
 1. HACS → Integrations → Custom repositories.
 2. Add `https://github.com/stevencr00k001/omarchy-theme-builder-ha`. Category: Integration.
@@ -31,7 +39,7 @@ frontend:
   themes: !include_dir_merge_named themes
 ```
 
-Frosted blur, and the Waybar-style header, need [card-mod](https://github.com/thomasloven/lovelace-card-mod) from HACS. The theme file also includes card-mod rules so standard cards and views keep the colours, borders, and wallpaper. Other styles still work from theme variables alone.
+Frosted blur, and the Waybar-style header, need [card-mod](https://github.com/thomasloven/lovelace-card-mod) from the Marketplace (or HACS on Home Assistant 2026.10 or older). The theme file also includes card-mod rules so standard cards and views keep the colours, borders, and wallpaper. Other styles still work from theme variables alone.
 
 ## Card styles
 
